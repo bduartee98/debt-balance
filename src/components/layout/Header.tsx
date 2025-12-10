@@ -1,4 +1,4 @@
-import { Moon, Sun, Plus, Users, LayoutDashboard, Receipt, Settings } from 'lucide-react';
+import { Moon, Sun, Plus, Users, LayoutDashboard, Receipt, Settings, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
@@ -53,6 +53,18 @@ export function Header({ onNewDebt }: HeaderProps) {
             >
               <Users className="h-4 w-4" />
               Pessoas
+            </NavLink>
+            <NavLink
+              to="/accounts"
+              className={({ isActive }) => cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                isActive 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <CreditCard className="h-4 w-4" />
+              Contas Pessoais
             </NavLink>
             <NavLink
               to="/settings"
