@@ -25,8 +25,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Person, SplitDebt } from '@/types';
-import { categories } from '@/lib/mockData';
+import { Person, Category, SplitDebt } from '@/types';
 import { cn } from '@/lib/utils';
 import { SplitDebtForm } from './SplitDebtForm';
 
@@ -34,31 +33,31 @@ interface DebtFormProps {
   open: boolean;
   onClose: () => void;
   people: Person[];
+  categories: Category[];
   onAddDebt: (debt: {
-    personId: string;
-    personName: string;
+    person_id: string;
+    category_id: string;
     amount: number;
     description: string;
-    category: string;
-    dueDate: Date;
-    status: 'pending';
-    notes?: string;
-  }) => void;
+    due_date: Date;
+    isInstallment?: boolean;
+    totalInstallments?: number;
+  }) => Promise<void>;
   onAddSplitDebts: (
     totalAmount: number,
     splits: SplitDebt[],
     description: string,
-    category: string,
-    dueDate: Date,
-    notes?: string
-  ) => void;
-  onAddPerson: (name: string) => Person;
+    categoryId: string,
+    dueDate: Date
+  ) => Promise<void>;
+  onAddPerson: (name: string) => Promise<Person>;
 }
 
 export function DebtForm({ 
   open, 
   onClose, 
   people, 
+  categories,
   onAddDebt, 
   onAddSplitDebts,
   onAddPerson 
@@ -67,25 +66,30 @@ export function DebtForm({
   const [newPersonName, setNewPersonName] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Pix');
+  const [categoryId, setCategoryId] = useState('');
   const [dueDate, setDueDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState('');
   const [isSplit, setIsSplit] = useState(false);
   const [showSplitForm, setShowSplitForm] = useState(false);
+  const [isInstallment, setIsInstallment] = useState(false);
+  const [totalInstallments, setTotalInstallments] = useState('2');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
     setPersonId('');
     setNewPersonName('');
     setAmount('');
     setDescription('');
-    setCategory('Pix');
+    setCategoryId('');
     setDueDate(new Date());
     setNotes('');
     setIsSplit(false);
     setShowSplitForm(false);
+    setIsInstallment(false);
+    setTotalInstallments('2');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isSplit) {
@@ -96,40 +100,48 @@ export function DebtForm({
     let selectedPerson = people.find(p => p.id === personId);
     
     if (!selectedPerson && newPersonName) {
-      selectedPerson = onAddPerson(newPersonName);
+      selectedPerson = await onAddPerson(newPersonName);
     }
 
     if (!selectedPerson || !amount || !description) return;
 
-    onAddDebt({
-      personId: selectedPerson.id,
-      personName: selectedPerson.name,
-      amount: parseFloat(amount),
-      description,
-      category,
-      dueDate,
-      status: 'pending',
-      notes: notes || undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await onAddDebt({
+        person_id: selectedPerson.id,
+        category_id: categoryId,
+        amount: parseFloat(amount),
+        description: notes ? `${description} - ${notes}` : description,
+        due_date: dueDate,
+        isInstallment,
+        totalInstallments: isInstallment ? parseInt(totalInstallments) : undefined,
+      });
 
-    resetForm();
-    onClose();
+      resetForm();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSplitSubmit = (splits: SplitDebt[]) => {
+  const handleSplitSubmit = async (splits: SplitDebt[]) => {
     if (!amount || !description) return;
 
-    onAddSplitDebts(
-      parseFloat(amount),
-      splits,
-      description,
-      category,
-      dueDate,
-      notes || undefined
-    );
+    setIsSubmitting(true);
+    try {
+      await onAddSplitDebts(
+        parseFloat(amount),
+        splits,
+        notes ? `${description} - ${notes}` : description,
+        categoryId,
+        dueDate
+      );
 
-    resetForm();
-    onClose();
+      resetForm();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (showSplitForm) {
@@ -184,8 +196,8 @@ export function DebtForm({
                     type="button"
                     size="icon"
                     variant="secondary"
-                    onClick={() => {
-                      const person = onAddPerson(newPersonName);
+                    onClick={async () => {
+                      const person = await onAddPerson(newPersonName);
                       setPersonId(person.id);
                       setNewPersonName('');
                     }}
@@ -212,14 +224,20 @@ export function DebtForm({
 
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
                   {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        {cat.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -273,11 +291,41 @@ export function DebtForm({
             />
           </div>
 
+          {/* Installment Option */}
+          <div className="flex items-center space-x-2 p-3 rounded-lg bg-muted/50">
+            <Checkbox
+              id="installment"
+              checked={isInstallment}
+              onCheckedChange={(checked) => setIsInstallment(checked === true)}
+            />
+            <label
+              htmlFor="installment"
+              className="flex-1 text-sm font-medium cursor-pointer"
+            >
+              Compra parcelada
+            </label>
+            {isInstallment && (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min="2"
+                  max="48"
+                  value={totalInstallments}
+                  onChange={(e) => setTotalInstallments(e.target.value)}
+                  className="w-16 h-8"
+                />
+                <span className="text-sm text-muted-foreground">parcelas</span>
+              </div>
+            )}
+          </div>
+
+          {/* Split Option */}
           <div className="flex items-center space-x-2 p-3 rounded-lg bg-muted/50">
             <Checkbox
               id="split"
               checked={isSplit}
               onCheckedChange={(checked) => setIsSplit(checked === true)}
+              disabled={isInstallment}
             />
             <label
               htmlFor="split"
@@ -292,8 +340,8 @@ export function DebtForm({
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1">
-              {isSplit ? 'Próximo' : 'Adicionar Dívida'}
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : isSplit ? 'Próximo' : 'Adicionar Dívida'}
             </Button>
           </div>
         </form>

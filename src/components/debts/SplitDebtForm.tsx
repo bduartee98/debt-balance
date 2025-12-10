@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Divide, Plus, User } from 'lucide-react';
+import { ArrowLeft, Check, Divide, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ interface SplitDebtFormProps {
   onBack: () => void;
   totalAmount: number;
   people: Person[];
-  onAddPerson: (name: string) => Person;
+  onAddPerson: (name: string) => Promise<Person>;
   onSubmit: (splits: SplitDebt[]) => void;
 }
 
@@ -73,9 +73,9 @@ export function SplitDebtForm({
 
   const splitAmount = calculateSplitAmount();
 
-  const handleAddNewPerson = () => {
+  const handleAddNewPerson = async () => {
     if (!newPersonName.trim()) return;
-    const person = onAddPerson(newPersonName.trim());
+    const person = await onAddPerson(newPersonName.trim());
     setSelectedPeople(prev => [...prev, person.id]);
     setNewPersonName('');
   };
@@ -87,7 +87,6 @@ export function SplitDebtForm({
         personId: person.id,
         personName: person.name,
         amount: customAmounts[personId] || splitAmount,
-        customAmount: !!customAmounts[personId],
       };
     });
 

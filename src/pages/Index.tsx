@@ -182,8 +182,6 @@ const Index = () => {
                 onCustomDateRangeChange={setCustomDateRange}
                 onMarkAsPaid={handleMarkAsPaid}
                 onDelete={handleDeleteDebt}
-                getPersonDebts={getPersonDebts}
-                getPersonTotalOwed={getPersonTotalOwed}
                 onMarkAllAsPaid={markAllAsPaid}
               />
             }
@@ -225,9 +223,6 @@ const Index = () => {
         onAddDebt={handleAddDebt}
         onAddSplitDebts={handleAddSplitDebts}
         onAddPerson={handleAddPerson}
-        getPersonDebts={getPersonDebts}
-        getPersonTotalOwed={getPersonTotalOwed}
-        onMarkAsPaid={handleMarkAsPaid}
       />
 
       <Toaster position="bottom-right" />
