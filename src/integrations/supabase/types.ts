@@ -14,6 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
+      bills: {
+        Row: {
+          amount: number
+          card_id: string
+          created_at: string
+          due_date: string
+          id: string
+          month_reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          month_reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          month_reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_expenses: {
+        Row: {
+          amount: number
+          bill_id: string
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_paid_separately: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bill_id: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_paid_separately?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bill_id?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_paid_separately?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_expenses_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          brand: string | null
+          color: string
+          created_at: string
+          credit_limit: number | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          color?: string
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          color?: string
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
