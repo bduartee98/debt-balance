@@ -1,20 +1,21 @@
-import { Moon, Sun, Plus, Users, LayoutDashboard, Receipt } from 'lucide-react';
+import { Moon, Sun, Plus, Users, LayoutDashboard, Receipt, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
-  isDark: boolean;
-  onToggleTheme: () => void;
   onNewDebt: () => void;
 }
 
-export function Header({ isDark, onToggleTheme, onNewDebt }: HeaderProps) {
+export function Header({ onNewDebt }: HeaderProps) {
+  const { profile } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 glass border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-bold text-gradient">DebtFlow</h1>
+          <h1 className="text-xl font-bold text-gradient">✦ GASTOS ✦</h1>
           
           <nav className="hidden md:flex items-center gap-1">
             <NavLink
@@ -53,20 +54,23 @@ export function Header({ isDark, onToggleTheme, onNewDebt }: HeaderProps) {
               <Users className="h-4 w-4" />
               Pessoas
             </NavLink>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) => cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                isActive 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Settings className="h-4 w-4" />
+              Configurações
+            </NavLink>
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleTheme}
-            className="rounded-lg"
-          >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-          
-          <Button onClick={onNewDebt} className="gap-2">
+          <Button onClick={onNewDebt} className="gap-2 btn-press">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Nova Dívida</span>
           </Button>
