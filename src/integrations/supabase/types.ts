@@ -166,6 +166,41 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_notifications: {
+        Row: {
+          created_at: string
+          debt_id: string
+          from_user_id: string
+          id: string
+          is_read: boolean
+          to_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          debt_id: string
+          from_user_id: string
+          id?: string
+          is_read?: boolean
+          to_user_id: string
+        }
+        Update: {
+          created_at?: string
+          debt_id?: string
+          from_user_id?: string
+          id?: string
+          is_read?: boolean
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_notifications_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debts: {
         Row: {
           amount: number
@@ -232,26 +267,103 @@ export type Database = {
           },
         ]
       }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_user_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_user_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_user_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       people: {
         Row: {
           created_at: string
           id: string
+          linked_user_id: string | null
           name: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          linked_user_id?: string | null
           name: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          linked_user_id?: string | null
           name?: string
           user_id?: string
         }
         Relationships: []
+      }
+      personal_expenses: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          paid_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

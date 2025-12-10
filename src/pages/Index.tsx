@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { DebtsPage } from '@/pages/DebtsPage';
 import { PeoplePage } from '@/pages/PeoplePage';
 import { PersonalAccountsPage } from '@/pages/PersonalAccountsPage';
+import { FriendsPage } from '@/pages/FriendsPage';
 import Settings from '@/pages/Settings';
 import { DebtForm } from '@/components/debts/DebtForm';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
@@ -198,6 +199,10 @@ const Index = () => {
                 getPersonTotalOwed={getPersonTotalOwed}
               />
             }
+          />
+          <Route
+            path="/friends"
+            element={<FriendsPage />}
           />
           <Route
             path="/accounts"
