@@ -57,6 +57,8 @@ export default function Auth() {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos');
+          } else if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+            toast.error('Email não confirmado. Verifique sua caixa de entrada e spam.');
           } else {
             toast.error(error.message);
           }
