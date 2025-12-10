@@ -1,4 +1,4 @@
-import { LayoutDashboard, Receipt, Users, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, CreditCard, UserPlus } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,7 @@ export function MobileNav() {
         <NavLink
           to="/"
           className={({ isActive }) => cn(
-            "flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors",
+            "flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
             isActive 
               ? "text-primary" 
               : "text-muted-foreground"
@@ -21,7 +21,7 @@ export function MobileNav() {
         <NavLink
           to="/debts"
           className={({ isActive }) => cn(
-            "flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors",
+            "flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
             isActive 
               ? "text-primary" 
               : "text-muted-foreground"
@@ -33,7 +33,7 @@ export function MobileNav() {
         <NavLink
           to="/people"
           className={({ isActive }) => cn(
-            "flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors",
+            "flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
             isActive 
               ? "text-primary" 
               : "text-muted-foreground"
@@ -43,9 +43,21 @@ export function MobileNav() {
           Pessoas
         </NavLink>
         <NavLink
+          to="/friends"
+          className={({ isActive }) => cn(
+            "flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
+            isActive 
+              ? "text-primary" 
+              : "text-muted-foreground"
+          )}
+        >
+          <UserPlus className="h-5 w-5" />
+          Amigos
+        </NavLink>
+        <NavLink
           to="/accounts"
           className={({ isActive }) => cn(
-            "flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors",
+            "flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
             isActive 
               ? "text-primary" 
               : "text-muted-foreground"

@@ -1,13 +1,50 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CreditCard, Plus, Wallet, TrendingUp, AlertCircle } from 'lucide-react';
-import { useCardsData } from '@/hooks/useCardsData';
-import { CardForm } from '@/components/cards/CardForm';
-import { CardItem } from '@/components/cards/CardItem';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Plus, 
+  Wallet, 
+  TrendingUp, 
+  Check, 
+  Trash2, 
+  Calendar,
+  Loader2,
+  Receipt
+} from 'lucide-react';
+import { usePersonalExpenses } from '@/hooks/usePersonalExpenses';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { format, isPast, isToday } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -17,107 +54,72 @@ const formatCurrency = (value: number) => {
 };
 
 export function PersonalAccountsPage() {
-  const [showCardForm, setShowCardForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [formLoading, setFormLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const {
-    cards,
-    bills,
     expenses,
     categories,
     loading,
-    addCard,
-    deleteCard,
-    addBill,
-    markBillAsPaid,
-    deleteBill,
+    totalPending,
+    totalPaid,
     addExpense,
-    markExpenseAsPaidSeparately,
+    markAsPaid,
     deleteExpense,
-  } = useCardsData();
+  } = usePersonalExpenses();
 
-  const handleAddCard = async (data: { name: string; brand?: string; credit_limit?: number; color: string }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!description.trim() || !amount) return;
+
+    setFormLoading(true);
     try {
-      await addCard(data);
-      toast.success('Cartão adicionado!');
+      await addExpense({
+        description: description.trim(),
+        amount: parseFloat(amount),
+        category_id: categoryId || undefined,
+        due_date: dueDate,
+      });
+      toast.success('Despesa adicionada!');
+      setDescription('');
+      setAmount('');
+      setCategoryId('');
+      setDueDate(undefined);
+      setShowForm(false);
     } catch (error) {
-      toast.error('Erro ao adicionar cartão');
+      toast.error('Erro ao adicionar despesa');
+    } finally {
+      setFormLoading(false);
     }
   };
 
-  const handleDeleteCard = async (id: string) => {
+  const handleMarkAsPaid = async (id: string) => {
     try {
-      await deleteCard(id);
-      toast.success('Cartão excluído!');
+      await markAsPaid(id);
+      toast.success('Marcado como pago!');
     } catch (error) {
-      toast.error('Erro ao excluir cartão');
+      toast.error('Erro ao marcar como pago');
     }
   };
 
-  const handleAddBill = async (data: { card_id: string; amount: number; due_date: Date; month_reference: string }) => {
+  const handleDelete = async () => {
+    if (!deleteId) return;
     try {
-      await addBill(data);
-      toast.success('Fatura adicionada!');
+      await deleteExpense(deleteId);
+      toast.success('Despesa excluída!');
+      setDeleteId(null);
     } catch (error) {
-      toast.error('Erro ao adicionar fatura');
+      toast.error('Erro ao excluir');
     }
   };
 
-  const handleMarkBillAsPaid = async (id: string) => {
-    try {
-      await markBillAsPaid(id);
-      toast.success('Fatura marcada como paga!');
-    } catch (error) {
-      toast.error('Erro ao marcar como paga');
-    }
-  };
-
-  const handleDeleteBill = async (id: string) => {
-    try {
-      await deleteBill(id);
-      toast.success('Fatura excluída!');
-    } catch (error) {
-      toast.error('Erro ao excluir fatura');
-    }
-  };
-
-  const handleAddExpense = async (data: { bill_id: string; category_id?: string; description?: string; amount: number }) => {
-    try {
-      await addExpense(data);
-      toast.success('Gasto adicionado!');
-    } catch (error) {
-      toast.error('Erro ao adicionar gasto');
-    }
-  };
-
-  const handleMarkExpenseAsPaidSeparately = async (id: string, isPaid: boolean) => {
-    try {
-      await markExpenseAsPaidSeparately(id, isPaid);
-      toast.success(isPaid ? 'Marcado como pago separadamente' : 'Desmarcado');
-    } catch (error) {
-      toast.error('Erro ao atualizar gasto');
-    }
-  };
-
-  const handleDeleteExpense = async (id: string) => {
-    try {
-      await deleteExpense(id);
-      toast.success('Gasto excluído!');
-    } catch (error) {
-      toast.error('Erro ao excluir gasto');
-    }
-  };
-
-  // Calculate metrics
-  const totalPending = bills
-    .filter(b => b.status === 'pending')
-    .reduce((sum, b) => sum + Number(b.amount), 0);
-
-  const totalPaid = bills
-    .filter(b => b.status === 'paid')
-    .reduce((sum, b) => sum + Number(b.amount), 0);
-
-  const overdueBills = bills.filter(
-    b => b.status === 'pending' && new Date(b.due_date) < new Date()
-  );
+  const pendingExpenses = expenses.filter(e => e.status === 'pending');
+  const paidExpenses = expenses.filter(e => e.status === 'paid');
 
   if (loading) {
     return (
@@ -136,16 +138,16 @@ export function PersonalAccountsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Contas Pessoais</h1>
-          <p className="text-muted-foreground">Gerencie seus cartões e faturas</p>
+          <p className="text-muted-foreground">Controle suas despesas pessoais</p>
         </div>
-        <Button onClick={() => setShowCardForm(true)}>
+        <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Novo Cartão
+          Nova Despesa
         </Button>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="glass card-shadow">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -173,63 +175,251 @@ export function PersonalAccountsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Pending Expenses */}
+      <Card className="glass card-shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Despesas Pendentes ({pendingExpenses.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pendingExpenses.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              Nenhuma despesa pendente
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {pendingExpenses.map((expense) => {
+                const isOverdue = expense.due_date && isPast(new Date(expense.due_date)) && !isToday(new Date(expense.due_date));
+                const isDueToday = expense.due_date && isToday(new Date(expense.due_date));
+                
+                return (
+                  <div
+                    key={expense.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border",
+                      isOverdue ? "bg-destructive/5 border-destructive/20" :
+                      isDueToday ? "bg-warning/5 border-warning/20" : "bg-card"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      {expense.category_color && (
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: expense.category_color }}
+                        />
+                      )}
+                      <div>
+                        <p className="font-medium">{expense.description}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {expense.category_name && (
+                            <span>{expense.category_name}</span>
+                          )}
+                          {expense.due_date && (
+                            <>
+                              <span>•</span>
+                              <span className={cn(
+                                isOverdue && "text-destructive",
+                                isDueToday && "text-warning"
+                              )}>
+                                {format(new Date(expense.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold">{formatCurrency(Number(expense.amount))}</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-success"
+                          onClick={() => handleMarkAsPaid(expense.id)}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => setDeleteId(expense.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Paid Expenses */}
+      {paidExpenses.length > 0 && (
         <Card className="glass card-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <AlertCircle className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Faturas Vencidas</p>
-                <p className="text-xl font-bold text-destructive">{overdueBills.length}</p>
-              </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-muted-foreground">
+              <Check className="h-5 w-5" />
+              Despesas Pagas ({paidExpenses.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {paidExpenses.slice(0, 10).map((expense) => (
+                <div
+                  key={expense.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-success/5 opacity-70"
+                >
+                  <div className="flex items-center gap-3">
+                    {expense.category_color && (
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: expense.category_color }}
+                      />
+                    )}
+                    <span className="line-through">{expense.description}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="line-through text-muted-foreground">
+                      {formatCurrency(Number(expense.amount))}
+                    </span>
+                    <Badge variant="secondary" className="bg-success/20 text-success">
+                      Pago
+                    </Badge>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Cards List */}
-      {cards.length === 0 ? (
-        <Card className="glass card-shadow">
-          <CardContent className="p-12 text-center">
-            <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">Nenhum cartão cadastrado</h3>
-            <p className="text-muted-foreground mb-4">
-              Adicione seu primeiro cartão para começar a controlar suas faturas
-            </p>
-            <Button onClick={() => setShowCardForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Cartão
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {cards.map((card) => (
-            <CardItem
-              key={card.id}
-              card={card}
-              bills={bills.filter(b => b.card_id === card.id)}
-              expenses={expenses}
-              categories={categories}
-              onDeleteCard={handleDeleteCard}
-              onAddBill={handleAddBill}
-              onMarkBillAsPaid={handleMarkBillAsPaid}
-              onDeleteBill={handleDeleteBill}
-              onAddExpense={handleAddExpense}
-              onMarkExpenseAsPaidSeparately={handleMarkExpenseAsPaidSeparately}
-              onDeleteExpense={handleDeleteExpense}
-            />
-          ))}
-        </div>
       )}
 
-      <CardForm
-        open={showCardForm}
-        onClose={() => setShowCardForm(false)}
-        onSubmit={handleAddCard}
-      />
+      {/* Add Expense Form */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Nova Despesa Pessoal
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição *</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ex: Conta de luz, Mercado..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">Valor *</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="R$ 0,00"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Categoria (opcional)</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sem categoria</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data de Vencimento (opcional)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !dueDate && 'text-muted-foreground'
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {dueDate ? format(dueDate, "dd/MM/yyyy", { locale: ptBR }) : 'Selecione'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={formLoading || !description.trim() || !amount}>
+                {formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Adicionar'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir despesa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
