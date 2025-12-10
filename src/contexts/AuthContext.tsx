@@ -11,7 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  updateProfile: (updates: { display_name?: string; avatar_url?: string; theme?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,9 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data) {
         setProfile({
           ...data,
+          theme: data.theme as 'midnight' | 'blossom',
           created_at: new Date(data.created_at),
           updated_at: new Date(data.updated_at),
-        } as Profile);
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: { display_name?: string; avatar_url?: string; theme?: string }) => {
     if (!user) return;
 
     const { error } = await supabase
@@ -114,7 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) throw error;
 
-    setProfile(prev => prev ? { ...prev, ...updates } : null);
+    setProfile(prev => prev ? { 
+      ...prev, 
+      ...updates,
+      theme: (updates.theme as 'midnight' | 'blossom') || prev.theme,
+    } : null);
   };
 
   return (

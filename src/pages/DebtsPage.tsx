@@ -1,27 +1,35 @@
 import { DebtList } from '@/components/debts/DebtList';
 import { FilterBar } from '@/components/dashboard/FilterBar';
-import { Debt, Person, DateFilter } from '@/types';
+import { Debt, Person, Category, DateFilter, DateRange } from '@/types';
 
-interface DebtsPageProps {
+export interface DebtsPageProps {
   debts: Debt[];
   people: Person[];
+  categories: Category[];
   dateFilter: DateFilter;
   onDateFilterChange: (filter: DateFilter) => void;
   personFilter: string | null;
   onPersonFilterChange: (personId: string | null) => void;
-  onMarkAsPaid: (id: string) => void;
-  onDelete: (id: string) => void;
+  customDateRange: DateRange | null;
+  onCustomDateRangeChange: (range: DateRange | null) => void;
+  onMarkAsPaid: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onMarkAllAsPaid: (personId: string) => Promise<void>;
 }
 
 export function DebtsPage({
   debts,
   people,
+  categories,
   dateFilter,
   onDateFilterChange,
   personFilter,
   onPersonFilterChange,
+  customDateRange,
+  onCustomDateRangeChange,
   onMarkAsPaid,
   onDelete,
+  onMarkAllAsPaid,
 }: DebtsPageProps) {
   return (
     <div className="space-y-6">
@@ -36,6 +44,8 @@ export function DebtsPage({
           personFilter={personFilter}
           onPersonFilterChange={onPersonFilterChange}
           people={people}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={onCustomDateRangeChange}
         />
       </div>
 

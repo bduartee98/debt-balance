@@ -46,6 +46,7 @@ export function useSupabaseData() {
       if (debtsRes.data) {
         setDebts(debtsRes.data.map((d: any) => ({
           ...d,
+          status: d.status as 'pending' | 'paid',
           person_name: d.people?.name,
           category_name: d.categories?.name,
           category_color: d.categories?.color,
@@ -192,6 +193,7 @@ export function useSupabaseData() {
     if (data) {
       const newDebt: Debt = {
         ...data,
+        status: data.status as 'pending' | 'paid',
         person_name: data.people?.name,
         category_name: data.categories?.name,
         category_color: data.categories?.color,
@@ -242,8 +244,9 @@ export function useSupabaseData() {
     if (error) throw error;
 
     if (data) {
-      const newDebts = data.map((d: any) => ({
+      const newDebts: Debt[] = data.map((d: any) => ({
         ...d,
+        status: d.status as 'pending' | 'paid',
         person_name: d.people?.name,
         category_name: d.categories?.name,
         category_color: d.categories?.color,
@@ -287,8 +290,9 @@ export function useSupabaseData() {
     if (error) throw error;
 
     if (data) {
-      const newDebts = data.map((d: any) => ({
+      const newDebts: Debt[] = data.map((d: any) => ({
         ...d,
+        status: d.status as 'pending' | 'paid',
         person_name: d.people?.name,
         category_name: d.categories?.name,
         category_color: d.categories?.color,
@@ -317,7 +321,7 @@ export function useSupabaseData() {
 
     setDebts(prev =>
       prev.map(d =>
-        d.id === id ? { ...d, status: 'paid', paid_at: new Date() } : d
+        d.id === id ? { ...d, status: 'paid' as const, paid_at: new Date() } : d
       )
     );
   };
@@ -334,7 +338,7 @@ export function useSupabaseData() {
     setDebts(prev =>
       prev.map(d =>
         d.person_id === personId && d.status === 'pending'
-          ? { ...d, status: 'paid', paid_at: new Date() }
+          ? { ...d, status: 'paid' as const, paid_at: new Date() }
           : d
       )
     );

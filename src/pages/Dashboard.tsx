@@ -6,9 +6,9 @@ import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
 import { TopDebtors } from '@/components/dashboard/TopDebtors';
 import { RecentDebts } from '@/components/dashboard/RecentDebts';
 import { FilterBar } from '@/components/dashboard/FilterBar';
-import { DashboardMetrics, Person, Debt, DateFilter } from '@/types';
+import { DashboardMetrics, Person, Debt, DateFilter, DateRange } from '@/types';
 
-interface DashboardProps {
+export interface DashboardProps {
   metrics: DashboardMetrics;
   debtsByPerson: { name: string; total: number }[];
   debtsByMonth: { name: string; pendente: number; recebido: number }[];
@@ -18,7 +18,9 @@ interface DashboardProps {
   onDateFilterChange: (filter: DateFilter) => void;
   personFilter: string | null;
   onPersonFilterChange: (personId: string | null) => void;
-  onMarkAsPaid: (id: string) => void;
+  customDateRange: DateRange | null;
+  onCustomDateRangeChange: (range: DateRange | null) => void;
+  onMarkAsPaid: (id: string) => Promise<void>;
 }
 
 export function Dashboard({
@@ -31,6 +33,8 @@ export function Dashboard({
   onDateFilterChange,
   personFilter,
   onPersonFilterChange,
+  customDateRange,
+  onCustomDateRangeChange,
   onMarkAsPaid,
 }: DashboardProps) {
   const navigate = useNavigate();
@@ -55,6 +59,8 @@ export function Dashboard({
           personFilter={personFilter}
           onPersonFilterChange={onPersonFilterChange}
           people={people}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={onCustomDateRangeChange}
         />
       </div>
 

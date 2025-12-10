@@ -6,8 +6,7 @@ import {
   Clock, 
   MoreHorizontal, 
   Search, 
-  Trash2,
-  Eye
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,8 +52,8 @@ export function DebtList({ debts, onMarkAsPaid, onDelete }: DebtListProps) {
   };
 
   const filteredDebts = debts.filter(debt =>
-    debt.personName.toLowerCase().includes(search.toLowerCase()) ||
-    debt.description.toLowerCase().includes(search.toLowerCase())
+    (debt.person_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (debt.description?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   return (
@@ -97,22 +96,29 @@ export function DebtList({ debts, onMarkAsPaid, onDelete }: DebtListProps) {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="text-xs">
-                            {getInitials(debt.personName)}
+                            {getInitials(debt.person_name || 'NN')}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{debt.personName}</span>
+                        <span className="font-medium">{debt.person_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span className="text-muted-foreground">{debt.description}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="font-normal">
-                        {debt.category}
+                      <Badge 
+                        variant="secondary" 
+                        className="font-normal"
+                        style={{ 
+                          backgroundColor: debt.category_color ? `${debt.category_color}20` : undefined,
+                          color: debt.category_color || undefined
+                        }}
+                      >
+                        {debt.category_name || 'Sem categoria'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(new Date(debt.createdAt), "dd MMM yyyy", { locale: ptBR })}
+                      {format(new Date(debt.created_at), "dd MMM yyyy", { locale: ptBR })}
                     </TableCell>
                     <TableCell>
                       <Badge 

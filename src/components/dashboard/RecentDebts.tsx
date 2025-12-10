@@ -59,13 +59,13 @@ export function RecentDebts({ debts, onMarkAsPaid, onViewAll }: RecentDebtsProps
               >
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="text-sm">
-                    {getInitials(debt.personName)}
+                    {getInitials(debt.person_name || 'NN')}
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{debt.personName}</p>
+                    <p className="text-sm font-medium truncate">{debt.person_name}</p>
                     <Badge 
                       variant={debt.status === 'paid' ? 'default' : 'secondary'}
                       className={cn(
@@ -81,7 +81,7 @@ export function RecentDebts({ debts, onMarkAsPaid, onViewAll }: RecentDebtsProps
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {debt.description} • {format(new Date(debt.createdAt), "dd MMM", { locale: ptBR })}
+                    {debt.description} • {format(new Date(debt.created_at), "dd MMM", { locale: ptBR })}
                   </p>
                 </div>
 

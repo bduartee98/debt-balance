@@ -1,14 +1,19 @@
 import { PeopleList } from '@/components/people/PeopleList';
 import { Person, Debt } from '@/types';
 
-interface PeoplePageProps {
+export interface PeoplePageProps {
   people: Person[];
   debts: Debt[];
-  onAddPerson: (name: string) => void;
-  onDeletePerson: (id: string) => void;
+  onAddPerson: (name: string) => Promise<Person>;
+  onDeletePerson: (id: string) => Promise<void>;
+  getPersonTotalOwed: (personId: string) => number;
 }
 
-export function PeoplePage({ people, debts, onAddPerson, onDeletePerson }: PeoplePageProps) {
+export function PeoplePage({ people, debts, onAddPerson, onDeletePerson, getPersonTotalOwed }: PeoplePageProps) {
+  const handleAddPerson = async (name: string) => {
+    await onAddPerson(name);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -19,8 +24,9 @@ export function PeoplePage({ people, debts, onAddPerson, onDeletePerson }: Peopl
       <PeopleList
         people={people}
         debts={debts}
-        onAddPerson={onAddPerson}
+        onAddPerson={handleAddPerson}
         onDeletePerson={onDeletePerson}
+        getPersonTotalOwed={getPersonTotalOwed}
       />
     </div>
   );

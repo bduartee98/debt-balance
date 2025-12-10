@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Search, Trash2, UserPlus } from 'lucide-react';
+import { Search, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -25,19 +25,20 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Person, Debt } from '@/types';
-import { cn } from '@/lib/utils';
 
 interface PeopleListProps {
   people: Person[];
   debts: Debt[];
-  onAddPerson: (name: string) => void;
-  onDeletePerson: (id: string) => void;
+  onAddPerson: (name: string) => Promise<void>;
+  onDeletePerson: (id: string) => Promise<void>;
+  getPersonTotalOwed: (personId: string) => number;
 }
 
-export function PeopleList({ people, debts, onAddPerson, onDeletePerson }: PeopleListProps) {
+export function PeopleList({ people, debts, onAddPerson, onDeletePerson, getPersonTotalOwed }: PeopleListProps) {
   const [search, setSearch] = useState('');
   const [newPersonName, setNewPersonName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -51,7 +52,7 @@ export function PeopleList({ people, debts, onAddPerson, onDeletePerson }: Peopl
   };
 
   const getPersonStats = (personId: string) => {
-    const personDebts = debts.filter(d => d.personId === personId);
+    const personDebts = debts.filter(d => d.person_id === personId);
     const pending = personDebts.filter(d => d.status === 'pending');
     const paid = personDebts.filter(d => d.status === 'paid');
     
@@ -67,11 +68,16 @@ export function PeopleList({ people, debts, onAddPerson, onDeletePerson }: Peopl
     person.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddPerson = () => {
+  const handleAddPerson = async () => {
     if (!newPersonName.trim()) return;
-    onAddPerson(newPersonName.trim());
-    setNewPersonName('');
-    setIsDialogOpen(false);
+    setIsSubmitting(true);
+    try {
+      await onAddPerson(newPersonName.trim());
+      setNewPersonName('');
+      setIsDialogOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -111,8 +117,8 @@ export function PeopleList({ people, debts, onAddPerson, onDeletePerson }: Peopl
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddPerson} className="flex-1" disabled={!newPersonName.trim()}>
-                    Adicionar
+                  <Button onClick={handleAddPerson} className="flex-1" disabled={!newPersonName.trim() || isSubmitting}>
+                    {isSubmitting ? 'Salvando...' : 'Adicionar'}
                   </Button>
                 </div>
               </div>
@@ -145,7 +151,7 @@ export function PeopleList({ people, debts, onAddPerson, onDeletePerson }: Peopl
                       <div>
                         <h3 className="font-semibold">{person.name}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Desde {format(new Date(person.createdAt), "MMM yyyy", { locale: ptBR })}
+                          Desde {format(new Date(person.created_at), "MMM yyyy", { locale: ptBR })}
                         </p>
                       </div>
                     </div>
